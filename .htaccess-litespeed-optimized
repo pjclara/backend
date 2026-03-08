@@ -1,0 +1,127 @@
+# =============================================================================
+# LiteSpeed-Optimized .htaccess for Laravel + Storage Files
+# Specifically configured for Hostinger hosting
+# =============================================================================
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # =========================================================================
+    # AUTHENTICATION HEADERS
+    # =========================================================================
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # =========================================================================
+    # PRIORITY 1: STATIC STORAGE FILES (Audio, Images, etc.)
+    # Serve directly without going through Laravel
+    # =========================================================================
+    # Match any request to /storage/* where the physical file exists
+    RewriteCond %{REQUEST_URI} ^/storage/
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^ - [L]
+
+    # =========================================================================
+    # LITESPEED CACHE CONTROL (Hostinger Optimization)
+    # =========================================================================
+    # Don't cache storage files - they may change
+    <IfModule LiteSpeed>
+        RewriteCond %{REQUEST_URI} ^/storage/
+        RewriteRule .* - [E=Cache-Control:no-cache]
+    </IfModule>
+
+    # =========================================================================
+    # REDIRECT TRAILING SLASHES
+    # =========================================================================
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # =========================================================================
+    # SEND REQUESTS TO LARAVEL
+    # =========================================================================
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# =============================================================================
+# MIME TYPES (Ensure correct audio serving)
+# =============================================================================
+<IfModule mod_mime.c>
+    AddType audio/mpeg .mp3
+    AddType audio/ogg .ogg
+    AddType audio/wav .wav
+    AddType audio/mp4 .m4a
+</IfModule>
+
+# =============================================================================
+# COMPRESSION (LiteSpeed/Apache)
+# =============================================================================
+<IfModule mod_deflate.c>
+    # Compress text files (don't compress audio - already compressed)
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
+
+# =============================================================================
+# BROWSER CACHING (Static Assets)
+# =============================================================================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Audio files - cache for 1 month
+    ExpiresByType audio/mpeg "access plus 1 month"
+    ExpiresByType audio/ogg "access plus 1 month"
+    ExpiresByType audio/wav "access plus 1 month"
+    
+    # Images - cache for 1 month
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    
+    # CSS/JS - cache for 1 week
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+# =============================================================================
+# SECURITY HEADERS
+# =============================================================================
+<IfModule mod_headers.c>
+    # Prevent directory browsing
+    Options -Indexes
+    
+    # Allow audio files to be accessed from anywhere (CORS)
+    <FilesMatch "\.(mp3|ogg|wav|m4a)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+    </FilesMatch>
+    
+    # Security headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# =============================================================================
+# FILE ACCESS RESTRICTIONS
+# =============================================================================
+# Deny access to sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Deny access to Laravel internal files
+<FilesMatch "(composer\.json|composer\.lock|package\.json|\.env|\.git)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>

@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Route;
  * GET    /api/exercises/{id}         - Obter exercício específico
  * PUT    /api/exercises/{id}         - Atualizar exercício
  * DELETE /api/exercises/{id}         - Deletar exercício
+ * 
+ * IMPORTANT: The {exercise} parameter MUST be a valid UUID to prevent
+ * conflicts with static file requests (e.g., audio files).
  */
 
-Route::apiResource('exercises', ExerciseController::class);
+Route::apiResource('exercises', ExerciseController::class)
+    ->whereUuid('exercise');

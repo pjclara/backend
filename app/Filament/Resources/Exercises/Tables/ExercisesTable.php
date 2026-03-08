@@ -77,7 +77,7 @@ class ExercisesTable
                         
                         // 1. Primeiro, verifica se já tem audio_url_1 válido em sentences/
                         if (!empty($record->audio_url_1) && 
-                            str_contains($record->audio_url_1, 'audio/sentences/') &&
+                            str_contains($record->audio_url_1, 'audio/setences/') &&
                             Storage::disk('public')->exists($record->audio_url_1)) {
                             $audioUrl = $record->audio_url_1;
                         }

@@ -13,6 +13,15 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # ============================================================
+    # PRIORITY: Serve static files directly (audio, images, etc.)
+    # This prevents Laravel from intercepting storage file requests
+    # ============================================================
+    # If the requested file exists in /storage/* directory, serve it directly
+    RewriteCond %{REQUEST_URI} ^/storage/
+    RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+    RewriteRule ^ - [L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
