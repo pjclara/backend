@@ -73,7 +73,7 @@ class WordsTable
                             $livewire->js("
                                 const audio = new Audio('{$url}');
                                 audio.onerror = function() {
-                                    console.warn('Áudio não encontrado, usando síntese de voz');
+                                    console.warn('Áudio não encontrado para a palavra \"{$word}\", usando síntese de voz');
                                     window.speechSynthesis.cancel();
                                     const utterance = new SpeechSynthesisUtterance('{$word}');
                                     utterance.lang = 'pt-PT';
@@ -81,7 +81,7 @@ class WordsTable
                                     window.speechSynthesis.speak(utterance);
                                 };
                                 audio.play().catch(error => {
-                                    console.warn('Erro ao reproduzir áudio, usando síntese de voz');
+                                    console.warn('Erro ao reproduzir áudio para a palavra \"{$word}\":', error);
                                     window.speechSynthesis.cancel();
                                     const utterance = new SpeechSynthesisUtterance('{$word}');
                                     utterance.lang = 'pt-PT';
@@ -90,7 +90,7 @@ class WordsTable
                                 });
                             ");
                         } else {
-                            // Fallback para síntese de voz
+                            // Fallback para síntese de voz se não há áudio
                             $word = str_replace("'", "\\'", $record->word);
                             $livewire->js("
                                 window.speechSynthesis.cancel();

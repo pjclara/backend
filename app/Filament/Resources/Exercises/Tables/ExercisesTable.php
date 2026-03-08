@@ -77,9 +77,11 @@ class ExercisesTable
                         
                         // 1. Primeiro, verifica se já tem audio_url_1 válido em sentences/
                         if (!empty($record->audio_url_1) && 
-                            str_contains($record->audio_url_1, 'audio/setences/') &&
+                            str_starts_with($record->audio_url_1, 'audio/sentences/') &&
                             Storage::disk('public')->exists($record->audio_url_1)) {
                             $audioUrl = $record->audio_url_1;
+
+                            
                         }
                         
                         // 2. Se não tem, tenta encontrar o arquivo baseado no número do exercício
@@ -124,14 +126,15 @@ class ExercisesTable
                         }
                         
                         // Reproduz o áudio se houver
-                        if ($audioUrl && Storage::disk('public')->exists($audioUrl)) {
-                            $url = Storage::disk('public')->url($audioUrl);
+                        if ($audioUrl) {
+                            $audioPath = ltrim($audioUrl, '/');
+                            $url = asset('storage/' . $audioPath);
                             $url = str_replace("'", "\\'", $url);
                             $sentence = str_replace("'", "\\'", $record->sentence);
                             $livewire->js("
                                 const audio = new Audio('{$url}');
                                 audio.onerror = function() {
-                                    console.warn('Áudio não encontrado, usando síntese de voz');
+                                    console.warn('Áudio não encontrado para exercício {$record->number}, usando síntese de voz');
                                     window.speechSynthesis.cancel();
                                     const utterance = new SpeechSynthesisUtterance('{$sentence}');
                                     utterance.lang = 'pt-PT';
@@ -139,7 +142,7 @@ class ExercisesTable
                                     window.speechSynthesis.speak(utterance);
                                 };
                                 audio.play().catch(error => {
-                                    console.warn('Erro ao reproduzir áudio, usando síntese de voz');
+                                    console.warn('Erro ao reproduzir áudio para exercício {$record->number}:', error);
                                     window.speechSynthesis.cancel();
                                     const utterance = new SpeechSynthesisUtterance('{$sentence}');
                                     utterance.lang = 'pt-PT';
@@ -148,7 +151,7 @@ class ExercisesTable
                                 });
                             ");
                         } else {
-                            // Fallback para síntese de voz
+                            // Fallback para síntese de voz se não há áudio
                             $sentence = str_replace("'", "\\'", $record->sentence);
                             $livewire->js("
                                 window.speechSynthesis.cancel();
