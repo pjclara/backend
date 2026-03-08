@@ -10,7 +10,25 @@ use Illuminate\Support\Facades\Log;
 /**
  * Simple Paused Audio Service
  * 
- * Uses comma insertion to create natural pauses in Google TTS
+ * Uses comma insertion to cre            
+            \exec($cmd, $output, $returnCode);
+            
+            if ($returnCode === 0 && \file_exists($outputFile)) {
+                $processedData = \file_get_contents($outputFile);
+                
+                // Cleanup
+                @\unlink($inputFile);
+                @\unlink($outputFile);
+                
+                return $processedData;
+            }
+            
+            // Cleanup on failure
+            @\unlink($inputFile);
+            @\unlink($outputFile);
+            
+            Log::warning('FFmpeg processing failed, returning original audio');
+            return $audioData;in Google TTS
  * Much faster and simpler than FFmpeg concatenation
  */
 class SimplePausedAudioService
@@ -48,13 +66,13 @@ class SimplePausedAudioService
      */
     public function insertCommasForPauses(string $sentence): string
     {
-        $sentence = trim($sentence);
+        $sentence = \trim($sentence);
         
         // Remove existing punctuation at the end
-        $sentence = preg_replace('/[.,;:!?¿¡]+$/', '', $sentence);
+        $sentence = \preg_replace('/[.,;:!?¿¡]+$/', '', $sentence);
         
         // Split into words (preserve internal punctuation like "D'Ávila")
-        $words = preg_split('/\s+/', $sentence, -1, PREG_SPLIT_NO_EMPTY);
+        $words = \preg_split('/\s+/', $sentence, -1, PREG_SPLIT_NO_EMPTY);
         
         if (empty($words)) {
             return $sentence;
@@ -106,7 +124,7 @@ class SimplePausedAudioService
         ?float $speed = null,
         ?int $exerciseNumber = null
     ): ?string {
-        $sentence = trim($sentence);
+        $sentence = \trim($sentence);
         if (empty($sentence)) {
             return null;
         }
@@ -172,7 +190,7 @@ class SimplePausedAudioService
     protected function fetchGoogleTTS(string $text, string $lang): ?string
     {
         try {
-            $encodedText = urlencode($text);
+            $encodedText = \urlencode($text);
             $url = "https://translate.google.com/translate_tts?ie=UTF-8&tl={$lang}&client=tw-ob&q={$encodedText}";
             
             $response = Http::withHeaders([
@@ -180,18 +198,18 @@ class SimplePausedAudioService
                 'Referer' => 'https://translate.google.com/',
             ])->timeout(15)->get($url);
             
-            if ($response->successful() && strlen($response->body()) > 100) {
+            if ($response->successful() && \strlen($response->body()) > 100) {
                 return $response->body();
             }
             
             // Retry once if failed
-            sleep(1);
+            \sleep(1);
             $response = Http::withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 'Referer' => 'https://translate.google.com/',
             ])->timeout(15)->get($url);
             
-            if ($response->successful() && strlen($response->body()) > 100) {
+            if ($response->successful() && \strlen($response->body()) > 100) {
                 return $response->body();
             }
             
@@ -211,7 +229,7 @@ class SimplePausedAudioService
      */
     protected function processAudioSpeed(string $audioData, float $speed): ?string
     {
-        $ffmpegPath = trim(shell_exec('which ffmpeg') ?? '');
+        $ffmpegPath = trim(\shell_exec('which ffmpeg') ?? '');
         
         if (empty($ffmpegPath)) {
             Log::warning('FFmpeg not found, returning original audio');
@@ -221,28 +239,28 @@ class SimplePausedAudioService
         try {
             // Create temp files
             $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
+            if (!\file_exists($tempDir)) {
+                \mkdir($tempDir, 0755, true);
             }
             
-            $inputFile = $tempDir . '/' . uniqid('input_') . '.mp3';
-            $outputFile = $tempDir . '/' . uniqid('output_') . '.mp3';
+            $inputFile = $tempDir . '/' . \uniqid('input_') . '.mp3';
+            $outputFile = $tempDir . '/' . \uniqid('output_') . '.mp3';
             
             // Save input audio
-            file_put_contents($inputFile, $audioData);
+            \file_put_contents($inputFile, $audioData);
             
             // Process with FFmpeg: apply speed and normalize volume
-            $cmd = sprintf(
+            $cmd = \sprintf(
                 '%s -i %s -filter:a "atempo=%s,loudnorm" -ar %d -b:a %dk %s -y 2>&1',
-                escapeshellarg($ffmpegPath),
-                escapeshellarg($inputFile),
+                \escapeshellarg($ffmpegPath),
+                \escapeshellarg($inputFile),
                 $speed,
                 $this->sampleRate,
                 $this->bitrate,
-                escapeshellarg($outputFile)
+                \escapeshellarg($outputFile)
             );
             
-            exec($cmd, $output, $returnCode);
+            \exec($cmd, $output, $returnCode);
             
             if ($returnCode === 0 && file_exists($outputFile)) {
                 $processedData = file_get_contents($outputFile);
