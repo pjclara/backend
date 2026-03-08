@@ -12,6 +12,7 @@
         "php": "^8.2",
         "filament/filament": "4.0",
         "firebase/php-jwt": "^7.0",
+        "laravel-lang/lang": "^15.28",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "masbug/flysystem-google-drive-ext": "^2.4"
