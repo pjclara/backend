@@ -26,7 +26,7 @@ class EnhancedAudioService
     
     public function __construct()
     {
-        $this->ffmpegPath = trim(shell_exec('which ffmpeg') ?? '');
+        $this->ffmpegPath = trim(\shell_exec('which ffmpeg') ?? '');
         $this->storagePath = storage_path('app/public');
         
         if (empty($this->ffmpegPath)) {

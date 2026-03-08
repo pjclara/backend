@@ -211,7 +211,7 @@ class SimplePausedAudioService
      */
     protected function processAudioSpeed(string $audioData, float $speed): ?string
     {
-        $ffmpegPath = trim(shell_exec('which ffmpeg') ?? '');
+        $ffmpegPath = trim(\shell_exec('which ffmpeg') ?? '');
         
         if (empty($ffmpegPath)) {
             Log::warning('FFmpeg not found, returning original audio');
