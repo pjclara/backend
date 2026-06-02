@@ -12,9 +12,6 @@ git pull
 echo "==> composer install"
 composer install --no-dev --optimize-autoloader --quiet
 
-echo "==> migrate"
-php artisan migrate --force
-
 echo "==> cache"
 php artisan config:cache
 php artisan route:cache
